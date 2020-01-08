@@ -114,12 +114,12 @@ class Player(pygame.sprite.Sprite):
     def update(self):
         if self.rect.x < 0:
             self.rect.x = 0
-        elif self.rect.x > WIDTH:
-            self.rect.x = WIDTH
+        elif self.rect.x > WIDTH - 70:
+            self.rect.x = WIDTH - 70
         elif self.rect.y < 0:
             self.rect.y = 0
-        elif self.rect.y > HEIGHT:
-            self.rect.y = HEIGHT
+        elif self.rect.y > HEIGHT - 70:
+            self.rect.y = HEIGHT - 70
 
     def move(self, i):
         g = True
