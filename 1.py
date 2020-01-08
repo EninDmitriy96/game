@@ -1,4 +1,5 @@
 import pygame
+from random import randrange
 
 pygame.init()
 screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
@@ -109,7 +110,7 @@ class Player(pygame.sprite.Sprite):
         self.image = pygame.Surface((50, 50))
         self.image.fill((0, 255, 0))
         self.rect = self.image.get_rect()
-        self.rect.center = (WIDTH / 2, HEIGHT / 2)
+        self.rect.center = (WIDTH / 2, HEIGHT - 50)
 
     def update(self):
         if self.rect.left > WIDTH:
@@ -131,7 +132,18 @@ class Enemy(pygame.sprite.Sprite):
 
 
 class Let(pygame.sprite.Sprite):
-    pass
+    def __init__(self, group):
+        pygame.sprite.Sprite.__init__(self, group)
+        w = randrange(50, 300)
+        h = randrange(50, 300)
+        self.image = pygame.image.load('data/let.png')
+        self.image = pygame.transform.scale(self.image, (w, h))
+        self.rect = self.image.get_rect()
+        self.rect.x = randrange(10, WIDTH)
+        self.rect.y = randrange(-HEIGHT * 5, 0)
+
+    def update(self):
+        self.rect = self.rect.move(0, 10)
 
 
 class Bonus(pygame.sprite.Sprite):
@@ -154,6 +166,9 @@ while running:
         player_sprites.add(player)
         fon_y = 0
         fon_y1 = -HEIGHT
+        lets_c = 10
+        for i in range(lets_c):
+            Let(let_sprites)
         while run:
             clock.tick(FPS)
             for event in pygame.event.get():
@@ -186,6 +201,8 @@ while running:
                     fon_y = -HEIGHT
                 elif fon_y1 > HEIGHT:
                     fon_y1 = -HEIGHT
+                let_sprites.draw(screen)
+                let_sprites.update()
                 player_sprites.draw(screen)
             pygame.display.flip()
     else:
