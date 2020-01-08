@@ -144,7 +144,7 @@ class Let(pygame.sprite.Sprite):
         self.image = pygame.image.load('data/let.png')
         self.image = pygame.transform.scale(self.image, (w, h))
         self.rect = self.image.get_rect()
-        self.rect.x = randrange(10, WIDTH)
+        self.rect.x = randrange(10, WIDTH - w)
         self.rect.y = randrange(-HEIGHT * 5, 0)
 
     def update(self):
