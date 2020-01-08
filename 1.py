@@ -5,8 +5,10 @@ screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 win = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 WIDTH, HEIGHT = pygame.display.get_surface().get_size()
 pygame.display.set_caption('Game')
+fon = pygame.image.load('data/fon.png')
+fon = pygame.transform.scale(fon, (WIDTH, HEIGHT))
 clock = pygame.time.Clock()
-FPS = 30
+FPS = 60
 
 
 class Menu:
@@ -150,6 +152,8 @@ while running:
         run = True
         player = Player()
         player_sprites.add(player)
+        fon_y = 0
+        fon_y1 = -HEIGHT
         while run:
             clock.tick(FPS)
             for event in pygame.event.get():
@@ -174,7 +178,14 @@ while running:
                 keys = pygame.key.get_pressed()
                 player.move(keys)
                 player_sprites.update()
-                screen.fill((0, 0, 0))
+                screen.blit(fon, (0, fon_y))
+                screen.blit(fon, (0, fon_y1))
+                fon_y += 10
+                fon_y1 += 10
+                if fon_y > HEIGHT:
+                    fon_y = -HEIGHT
+                elif fon_y1 > HEIGHT:
+                    fon_y1 = -HEIGHT
                 player_sprites.draw(screen)
             pygame.display.flip()
     else:
