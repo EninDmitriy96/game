@@ -112,12 +112,30 @@ class Player(pygame.sprite.Sprite):
         self.rect.center = (WIDTH / 2, HEIGHT - 70)
 
     def update(self):
-        if self.rect.left > WIDTH:
-            self.rect.right = 0
+        if self.rect.x < 0:
+            self.rect.x = 0
+        elif self.rect.x > WIDTH:
+            self.rect.x = WIDTH
+        elif self.rect.y < 0:
+            self.rect.y = 0
+        elif self.rect.y > HEIGHT:
+            self.rect.y = HEIGHT
 
     def move(self, i):
         g = True
-        if i[pygame.K_LEFT]:
+        if i[pygame.K_UP] and i[pygame.K_RIGHT]:
+            self.rect.y -= 20
+            self.rect.x += 20
+        elif i[pygame.K_UP] and i[pygame.K_LEFT]:
+            self.rect.y -= 20
+            self.rect.x -= 20
+        elif i[pygame.K_DOWN] and i[pygame.K_RIGHT]:
+            self.rect.y += 20
+            self.rect.x += 20
+        elif i[pygame.K_DOWN] and i[pygame.K_LEFT]:
+            self.rect.y += 20
+            self.rect.x -= 20
+        elif i[pygame.K_LEFT]:
             self.rect.x -= 10
         elif i[pygame.K_RIGHT]:
             self.rect.x += 10
@@ -213,4 +231,3 @@ while running:
     else:
         running = False
 pygame.quit()
-
