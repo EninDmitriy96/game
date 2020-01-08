@@ -107,24 +107,29 @@ class PauseMenu:
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface((50, 50))
-        self.image.fill((0, 255, 0))
+        self.image = pygame.image.load('data/player_s.png')
         self.rect = self.image.get_rect()
-        self.rect.center = (WIDTH / 2, HEIGHT - 50)
+        self.rect.center = (WIDTH / 2, HEIGHT - 70)
 
     def update(self):
         if self.rect.left > WIDTH:
             self.rect.right = 0
 
     def move(self, i):
+        g = True
         if i[pygame.K_LEFT]:
-            self.rect.x -= 5
+            self.rect.x -= 10
         elif i[pygame.K_RIGHT]:
-            self.rect.x += 5
+            self.rect.x += 10
         elif i[pygame.K_UP]:
-            self.rect.y -= 5
+            self.rect.y -= 10
         elif i[pygame.K_DOWN]:
-            self.rect.y += 5
+            self.rect.y += 10
+        else:
+            g = False
+            self.image = pygame.image.load('data/player_s.png')
+        if g:
+            self.image = pygame.image.load('data/player_g.png')
 
 
 class Enemy(pygame.sprite.Sprite):
@@ -135,7 +140,7 @@ class Let(pygame.sprite.Sprite):
     def __init__(self, group):
         pygame.sprite.Sprite.__init__(self, group)
         w = randrange(50, 300)
-        h = randrange(50, 300)
+        h = randrange(50, w + 10)
         self.image = pygame.image.load('data/let.png')
         self.image = pygame.transform.scale(self.image, (w, h))
         self.rect = self.image.get_rect()
@@ -208,3 +213,4 @@ while running:
     else:
         running = False
 pygame.quit()
+
