@@ -8,6 +8,7 @@ WIDTH, HEIGHT = pygame.display.get_surface().get_size()
 pygame.display.set_caption('Game')
 fon = pygame.image.load('data/fon.png')
 fon = pygame.transform.scale(fon, (WIDTH, HEIGHT))
+bullets_sprites = pygame.sprite.Group()
 clock = pygame.time.Clock()
 FPS = 60
 
@@ -176,6 +177,11 @@ class Player(pygame.sprite.Sprite):
         if g:
             self.image = pygame.image.load('data/player_g.png')
 
+    def shot(self, event):
+        if event[pygame.K_SPACE]:
+            shot = Bullet(self.rect.x, self.rect.y)
+            bullets_sprites.add(shot)
+
 
 class Enemy(pygame.sprite.Sprite):
     pass
@@ -194,6 +200,18 @@ class Let(pygame.sprite.Sprite):
 
     def update(self):
         self.rect = self.rect.move(0, 10)
+
+
+class Bullet(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface((10, 30))
+        self.image.fill((0, 255, 0))
+        self.rect = self.image.get_rect()
+        self.rect.center = (x + 35, y)
+
+    def update(self):
+        self.rect.y -= 50
 
 
 class Bonus(pygame.sprite.Sprite):
@@ -250,11 +268,14 @@ while running:
                             fon_y1 = -HEIGHT
                             lets_c = 10
                             lets = 0
+                        player.shot(event)
                     pause_menu.draw(x, y)
             if not pause:
                 keys = pygame.key.get_pressed()
                 player.move(keys)
+                player.shot(keys)
                 player_sprites.update()
+                bullets_sprites.update()
                 screen.blit(fon, (0, fon_y))
                 screen.blit(fon, (0, fon_y1))
                 fon_y += 10
@@ -266,6 +287,7 @@ while running:
                 let_sprites.draw(screen)
                 let_sprites.update()
                 player_sprites.draw(screen)
+                bullets_sprites.draw(screen)
                 if lets != lets_c:
                     for i in range(5):
                         Let(let_sprites)
