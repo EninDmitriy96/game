@@ -131,6 +131,38 @@ class PauseMenu:
         screen.blit(self.continuebtn, (500, 650))
         screen.blit(self.newgame, (100, 620))
 
+class GameOverMenu:
+    def __init__(self):
+        self.mainmenu_btn = pygame.Surface((200, 100))
+        self.newgame_btn = pygame.Surface((200, 100))
+        self.fon = pygame.image.load('data/pause_fon.png')
+        self.fon = pygame.transform.scale(self.fon, (WIDTH, HEIGHT))
+        self.mainmenu = pygame.image.load('data/main_menu.png')
+        self.newgame = pygame.image.load('data/newgame.png')
+        self.mainmenu_btn.set_colorkey((0, 0, 0))
+        self.newgame_btn.set_colorkey((0, 0, 0))
+
+    def mainmenu_btn_check(self, x, y):
+        return x in [i for i in range(100, 400)] and \
+               y in [i for i in range(350, 550)]
+
+    def newgame_btn_check(self, x, y):
+        return x in [i for i in range(100, 399)] and \
+               y in [i for i in range(620, 720)]
+
+    def draw(self, x, y):
+        if self.mainmenu_btn_check(x, y):
+            self.mainmenu = pygame.image.load('data/main_menu1.png')
+        elif self.newgame_btn_check(x, y):
+            self.newgame = pygame.image.load('data/newgame1.png')
+        else:
+            self.mainmenu = pygame.image.load('data/main_menu.png')
+            self.newgame = pygame.image.load('data/newgame.png')
+        screen.blit(self.fon, (0, 0))
+        win.blit(screen, (0, 0))
+        screen.blit(self.mainmenu, (100, 350))
+        screen.blit(self.newgame, (100, 620))
+
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -138,6 +170,7 @@ class Player(pygame.sprite.Sprite):
         self.image = pygame.image.load('data/player_s.png')
         self.rect = self.image.get_rect()
         self.rect.center = (WIDTH / 2, HEIGHT - 70)
+        self.lives = 3
 
     def update(self):
         if self.rect.x < 0:
@@ -148,6 +181,9 @@ class Player(pygame.sprite.Sprite):
             self.rect.y = 0
         elif self.rect.y > HEIGHT - 70:
             self.rect.y = HEIGHT - 70
+        if pygame.sprite.spritecollide(self, let_sprites, True):
+            self.lives -= 1
+            self.rect.center = (WIDTH / 2, HEIGHT - 70)
 
     def move(self, i):
         g = True
@@ -229,6 +265,7 @@ while running:
         let_sprites = pygame.sprite.Group()
         bonus_sprites = pygame.sprite.Group()
         pause = False
+        game_over = False
         run = True
         player = Player()
         player_sprites.add(player)
@@ -243,7 +280,7 @@ while running:
                     run = False
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                     pause = not pause
-                if pause:
+                if pause and not game_over:
                     x, y = 0, 0
                     if event.type == pygame.MOUSEMOTION:
                         x, y = event.pos
@@ -270,7 +307,7 @@ while running:
                             lets = 0
                         player.shot(event)
                     pause_menu.draw(x, y)
-            if not pause:
+            if not pause and not game_over:
                 keys = pygame.key.get_pressed()
                 player.move(keys)
                 player.shot(keys)
@@ -294,6 +331,33 @@ while running:
                     lets += 5
                 else:
                     enemy = Enemy()
+                if player.lives == 0:
+                    game_over = True
+            if game_over:
+                gameover = GameOverMenu()
+                x, y = 0, 0
+                if event.type == pygame.MOUSEMOTION:
+                    x, y = event.pos
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    x, y = event.pos
+                    if gameover.mainmenu_btn_check(x, y):
+                        run = False
+                        menu.start_btn_d = False
+                        break
+                    elif gameover.newgame_btn_check(x, y):
+                        player_sprites = pygame.sprite.Group()
+                        enemy_sprites = pygame.sprite.Group()
+                        let_sprites = pygame.sprite.Group()
+                        bonus_sprites = pygame.sprite.Group()
+                        pause = False
+                        run = True
+                        player = Player()
+                        player_sprites.add(player)
+                        fon_y = 0
+                        fon_y1 = -HEIGHT
+                        lets_c = 10
+                        lets = 0
+                gameover.draw(x, y)
             pygame.display.flip()
     else:
         running = False
