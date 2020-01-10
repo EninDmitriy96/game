@@ -1,4 +1,5 @@
 import pygame
+import time
 from random import randrange
 
 pygame.init()
@@ -131,6 +132,7 @@ class PauseMenu:
         screen.blit(self.continuebtn, (500, 650))
         screen.blit(self.newgame, (100, 620))
 
+
 class GameOverMenu:
     def __init__(self):
         self.mainmenu_btn = pygame.Surface((200, 100))
@@ -170,6 +172,8 @@ class Player(pygame.sprite.Sprite):
         self.image = pygame.image.load('data/player_s.png')
         self.rect = self.image.get_rect()
         self.rect.center = (WIDTH / 2, HEIGHT - 70)
+        self.mask = pygame.mask.from_surface(self.image)
+        self.start = time.monotonic()
         self.lives = 3
 
     def update(self):
@@ -181,9 +185,6 @@ class Player(pygame.sprite.Sprite):
             self.rect.y = 0
         elif self.rect.y > HEIGHT - 70:
             self.rect.y = HEIGHT - 70
-        if pygame.sprite.spritecollide(self, let_sprites, True):
-            self.lives -= 1
-            self.rect.center = (WIDTH / 2, HEIGHT - 70)
 
     def move(self, i):
         g = True
@@ -233,9 +234,17 @@ class Let(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = randrange(10, WIDTH - w)
         self.rect.y = randrange(-HEIGHT * 5, 0)
+        self.mask = pygame.mask.from_surface(self.image)
 
     def update(self):
-        self.rect = self.rect.move(0, 10)
+        if pygame.sprite.collide_mask(self, player) and round(time.monotonic() - player.start) > 3:
+            player.lives -= 1
+            player.start = time.monotonic()
+            time.sleep(1)
+            player.rect.center = (WIDTH / 2, HEIGHT - 70)
+            self.kill()
+        else:
+            self.rect = self.rect.move(0, 10)
 
 
 class Bullet(pygame.sprite.Sprite):
@@ -273,6 +282,7 @@ while running:
         fon_y1 = -HEIGHT
         lets_c = 10
         lets = 0
+        start_t = time.monotonic()
         while run:
             clock.tick(FPS)
             for event in pygame.event.get():
@@ -298,6 +308,7 @@ while running:
                             let_sprites = pygame.sprite.Group()
                             bonus_sprites = pygame.sprite.Group()
                             pause = False
+                            game_over = False
                             run = True
                             player = Player()
                             player_sprites.add(player)
@@ -305,7 +316,7 @@ while running:
                             fon_y1 = -HEIGHT
                             lets_c = 10
                             lets = 0
-                        player.shot(event)
+                            start_t = time.monotonic()
                     pause_menu.draw(x, y)
             if not pause and not game_over:
                 keys = pygame.key.get_pressed()
@@ -325,12 +336,13 @@ while running:
                 let_sprites.update()
                 player_sprites.draw(screen)
                 bullets_sprites.draw(screen)
-                if lets != lets_c:
-                    for i in range(5):
+                print(time.monotonic() - start_t)
+                if round(time.monotonic() - start_t) % 20 == 0:
+                    for i in range(2):
                         Let(let_sprites)
                     lets += 5
-                else:
-                    enemy = Enemy()
+                #else:
+                 #   enemy = Enemy()
                 if player.lives == 0:
                     game_over = True
             if game_over:
@@ -350,6 +362,7 @@ while running:
                         let_sprites = pygame.sprite.Group()
                         bonus_sprites = pygame.sprite.Group()
                         pause = False
+                        game_over = False
                         run = True
                         player = Player()
                         player_sprites.add(player)
@@ -357,6 +370,7 @@ while running:
                         fon_y1 = -HEIGHT
                         lets_c = 10
                         lets = 0
+                        start_t = time.monotonic()
                 gameover.draw(x, y)
             pygame.display.flip()
     else:
