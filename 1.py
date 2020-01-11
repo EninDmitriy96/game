@@ -10,6 +10,7 @@ pygame.display.set_caption('Game')
 fon = pygame.image.load('data/fon.png')
 fon = pygame.transform.scale(fon, (WIDTH, HEIGHT))
 bullets_sprites = pygame.sprite.Group()
+health_sprites = pygame.sprite.Group()
 clock = pygame.time.Clock()
 FPS = 60
 
@@ -221,6 +222,24 @@ class Player(pygame.sprite.Sprite):
             shot = Bullet(self.rect.x, self.rect.y)
             bullets_sprites.add(shot)
 
+    def draw_health(self):
+        current_y = 40
+        current_x = 40
+        for i in health_sprites:
+            health_sprites.remove(i)
+        for i in range(self.lives):
+            heart = Health(current_x, current_y)
+            health_sprites.add(heart)
+            current_x += 70
+
+
+class Health(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.image.load('data/live.png')
+        self.rect = self.image.get_rect()
+        self.rect.center = (x, y)
+
 
 class Enemy(pygame.sprite.Sprite):
     pass
@@ -324,7 +343,7 @@ while running:
                 keys = pygame.key.get_pressed()
                 player.move(keys)
                 player.shot(keys)
-                player_sprites.update()
+                player.draw_health()
                 bullets_sprites.update()
                 screen.blit(fon, (0, fon_y))
                 screen.blit(fon, (0, fon_y1))
@@ -338,6 +357,7 @@ while running:
                 let_sprites.update()
                 player_sprites.draw(screen)
                 bullets_sprites.draw(screen)
+                health_sprites.draw(screen)
                 if round(time.monotonic() - start_t) % 20 == 0:
                     Let(let_sprites)
                 if player.lives == 0:
