@@ -217,10 +217,9 @@ class Player(pygame.sprite.Sprite):
         if g:
             self.image = pygame.image.load('data/player_g.png')
 
-    def shot(self, event):
-        if event[pygame.K_SPACE]:
-            shot = Bullet(self.rect.x, self.rect.y)
-            bullets_sprites.add(shot)
+    def shot(self):
+        shot = Bullet(self.rect.x, self.rect.y)
+        bullets_sprites.add(shot)
 
     def draw_health(self):
         current_y = 40
@@ -317,9 +316,12 @@ while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     run = False
-                elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                     pause = not pause
-                if pause and not game_over:
+                if not pause and not game_over:
+                    if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                        player.shot()
+                elif pause and not game_over:
                     x, y = 0, 0
                     if event.type == pygame.MOUSEMOTION:
                         x, y = event.pos
@@ -350,7 +352,6 @@ while running:
             if not pause and not game_over:
                 keys = pygame.key.get_pressed()
                 player.move(keys)
-                player.shot(keys)
                 player_sprites.update()
                 player.draw_health()
                 bullets_sprites.update()
