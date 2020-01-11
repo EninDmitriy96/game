@@ -241,7 +241,23 @@ class Health(pygame.sprite.Sprite):
 
 
 class Enemy(pygame.sprite.Sprite):
-    pass
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.image.load('data/enemy.png')
+        self.rect = self.image.get_rect()
+        self.rect.center = (WIDTH / 2, 90)
+        self.mask = pygame.mask.from_surface(self.image)
+        self.lives = 5
+
+    def update(self):
+        pass
+        b_in_let = False
+        for i in let_sprites:
+            if pygame.sprite.collide_mask(self, i):
+                b_in_let = True
+        if not b_in_let:
+            self.rect.x = player.rect.x
+            self.rect.y = player.rect.y // 4 - 40
 
 
 class Let(pygame.sprite.Sprite):
@@ -303,6 +319,7 @@ while running:
         pause = False
         game_over = False
         run = True
+        enemy_live = False
         player = Player()
         player_sprites.add(player)
         fon_y = 0
@@ -310,6 +327,7 @@ while running:
         lets_c = 10
         lets = 0
         start_t = time.monotonic()
+        time_without_enemy = time.monotonic()
         live_im = pygame.image.load('data/live.png')
         while run:
             clock.tick(FPS)
@@ -351,10 +369,18 @@ while running:
                     pause_menu.draw(x, y)
             if not pause and not game_over:
                 keys = pygame.key.get_pressed()
+                if not enemy_live:
+                    print(time.monotonic() - time_without_enemy)
+                    if round(time.monotonic() - time_without_enemy) % 20 == 0 and\
+                            round(time.monotonic() - time_without_enemy) != 0:
+                        enemy_live = True
+                        enemy = Enemy()
+                        enemy_sprites.add(enemy)
                 player.move(keys)
                 player_sprites.update()
                 player.draw_health()
                 bullets_sprites.update()
+                enemy_sprites.update()
                 screen.blit(fon, (0, fon_y))
                 screen.blit(fon, (0, fon_y1))
                 fon_y += 10
@@ -368,6 +394,7 @@ while running:
                 player_sprites.draw(screen)
                 bullets_sprites.draw(screen)
                 health_sprites.draw(screen)
+                enemy_sprites.draw(screen)
                 if round(time.monotonic() - start_t) % 20 == 0:
                     Let(let_sprites)
                 if player.lives == 0:
