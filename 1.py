@@ -274,9 +274,17 @@ class Bullet(pygame.sprite.Sprite):
         self.image = pygame.image.load('data/bullet_p.png')
         self.rect = self.image.get_rect()
         self.rect.center = (x + 35, y)
+        self.mask = pygame.mask.from_surface(self.image)
 
     def update(self):
-        self.rect.y -= 50
+        b_in_let = False
+        for i in let_sprites:
+            if pygame.sprite.collide_mask(self, i):
+                b_in_let = True
+                self.kill()
+                break
+        if not b_in_let:
+            self.rect.y -= 50
 
 
 class Bonus(pygame.sprite.Sprite):
@@ -343,6 +351,7 @@ while running:
                 keys = pygame.key.get_pressed()
                 player.move(keys)
                 player.shot(keys)
+                player_sprites.update()
                 player.draw_health()
                 bullets_sprites.update()
                 screen.blit(fon, (0, fon_y))
@@ -362,9 +371,6 @@ while running:
                     Let(let_sprites)
                 if player.lives == 0:
                     game_over = True
-                else:
-                    for i in range(0, 50 * player.lives, 50):
-                        screen.blit(live_im, (i, HEIGHT - 50))
             if game_over:
                 gameover = GameOverMenu()
                 x, y = 0, 0
