@@ -185,6 +185,8 @@ class Player(pygame.sprite.Sprite):
             self.rect.y = 0
         elif self.rect.y > HEIGHT - 70:
             self.rect.y = HEIGHT - 70
+        if round(time.monotonic() - self.start) < 3:
+            self.image = pygame.image.load('data/player_p.png')
 
     def move(self, i):
         g = True
@@ -250,8 +252,7 @@ class Let(pygame.sprite.Sprite):
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface((10, 30))
-        self.image.fill((0, 255, 0))
+        self.image = pygame.image.load('data/bullet_p.png')
         self.rect = self.image.get_rect()
         self.rect.center = (x + 35, y)
 
@@ -283,6 +284,7 @@ while running:
         lets_c = 10
         lets = 0
         start_t = time.monotonic()
+        live_im = pygame.image.load('data/live.png')
         while run:
             clock.tick(FPS)
             for event in pygame.event.get():
@@ -336,15 +338,13 @@ while running:
                 let_sprites.update()
                 player_sprites.draw(screen)
                 bullets_sprites.draw(screen)
-                print(time.monotonic() - start_t)
                 if round(time.monotonic() - start_t) % 20 == 0:
-                    for i in range(2):
-                        Let(let_sprites)
-                    lets += 5
-                #else:
-                 #   enemy = Enemy()
+                    Let(let_sprites)
                 if player.lives == 0:
                     game_over = True
+                else:
+                    for i in range(0, 50 * player.lives, 50):
+                        screen.blit(live_im, (i, HEIGHT - 50))
             if game_over:
                 gameover = GameOverMenu()
                 x, y = 0, 0
