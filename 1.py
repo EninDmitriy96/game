@@ -216,7 +216,7 @@ class Player(pygame.sprite.Sprite):
 
 
     def shot(self):
-        shot = Bullet(self.rect.x, self.rect.y)
+        shot = Bullet(self.rect.x, self.rect.y, -50, 22.5)
         bullets_sprites.add(shot)
 
     def draw_health(self):
@@ -244,13 +244,15 @@ class Enemy(pygame.sprite.Sprite):
         self.image = pygame.image.load('data/enemy.png')
         self.rect = self.image.get_rect()
         self.rect.center = (WIDTH / 2, -90)
+        self.rect.y = -90
         self.mask = pygame.mask.from_surface(self.image)
         self.lives = 5
         self.appearence = True
+        self.shot_time = time.monotonic()
 
     def update(self):
-        pass
         if self.appearence:
+            print(self.rect.y)
             self.rect.y += 10
             if self.rect.y == 90:
                 self.appearence = False
@@ -262,6 +264,9 @@ class Enemy(pygame.sprite.Sprite):
             if not b_in_let:
                 self.rect.x = player.rect.x
                 self.rect.y = player.rect.y // 4 - 40
+            if round(time.monotonic() - self.shot_time) % 2 == 0:
+                shot = Bullet(self.rect.x, self.rect.y, 50, 50)
+                enemy_bullets_sprites.add(shot)
 
 
 class Let(pygame.sprite.Sprite):
@@ -287,11 +292,15 @@ class Let(pygame.sprite.Sprite):
 
 
 class Bullet(pygame.sprite.Sprite):
-    def __init__(self, x, y):
+    def __init__(self, x, y, s, x_s):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.image.load('data/bullet_p.png')
+        self.s = s
+        if s == -50:
+            self.image = pygame.image.load('data/bullet_p.png')
+        else:
+            self.image = pygame.image.load('data/bullet_e.png')
         self.rect = self.image.get_rect()
-        self.rect.center = (x + 35, y)
+        self.rect.center = (x + x_s, y)
         self.mask = pygame.mask.from_surface(self.image)
 
     def update(self):
@@ -300,9 +309,10 @@ class Bullet(pygame.sprite.Sprite):
             if pygame.sprite.collide_mask(self, i):
                 b_in_let = True
                 self.kill()
+                i.kill()
                 break
         if not b_in_let:
-            self.rect.y -= 50
+            self.rect.y += self.s
 
 
 class Bonus(pygame.sprite.Sprite):
@@ -319,6 +329,7 @@ while running:
         enemy_sprites = pygame.sprite.Group()
         let_sprites = pygame.sprite.Group()
         bonus_sprites = pygame.sprite.Group()
+        enemy_bullets_sprites = pygame.sprite.Group()
         pause = False
         game_over = False
         run = True
@@ -384,6 +395,7 @@ while running:
                 player.draw_health()
                 bullets_sprites.update()
                 enemy_sprites.update()
+                enemy_bullets_sprites.update()
                 screen.blit(fon, (0, fon_y))
                 screen.blit(fon, (0, fon_y1))
                 fon_y += 10
@@ -396,9 +408,10 @@ while running:
                 let_sprites.update()
                 player_sprites.draw(screen)
                 bullets_sprites.draw(screen)
+                enemy_bullets_sprites.draw(screen)
                 health_sprites.draw(screen)
                 enemy_sprites.draw(screen)
-                if not enemy_live:
+                if not enemy_live and not round(time.monotonic() - time_without_enemy) % 28 == 0:
                     if round(time.monotonic() - start_t) % 4 == 0:
                         for i in range(2):
                             Let(let_sprites)
