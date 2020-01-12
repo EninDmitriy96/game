@@ -1,5 +1,5 @@
 import pygame
-import time
+from time import monotonic
 from random import randrange
 
 pygame.init()
@@ -12,7 +12,7 @@ fon = pygame.transform.scale(fon, (WIDTH, HEIGHT))
 bullets_sprites = pygame.sprite.Group()
 health_sprites = pygame.sprite.Group()
 clock = pygame.time.Clock()
-FPS = 80
+FPS = 100
 
 
 class Menu:
@@ -174,7 +174,7 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (WIDTH / 2, HEIGHT - 70)
         self.mask = pygame.mask.from_surface(self.image)
-        self.start = time.monotonic()
+        self.start = monotonic()
         self.lives = 3
 
     def update(self):
@@ -186,7 +186,7 @@ class Player(pygame.sprite.Sprite):
             self.rect.y = 0
         elif self.rect.y > HEIGHT - 70:
             self.rect.y = HEIGHT - 70
-        if round(time.monotonic() - self.start) < 3:
+        if round(monotonic() - self.start) < 3:
             self.image = pygame.image.load('data/player_p.png')
         else:
             self.image = pygame.image.load('data/player.png')
@@ -214,7 +214,6 @@ class Player(pygame.sprite.Sprite):
         elif i[pygame.K_DOWN]:
             self.rect.y += 20
 
-
     def shot(self):
         shot = Bullet(self.rect.x, self.rect.y, -50, 22.5)
         bullets_sprites.add(shot)
@@ -239,16 +238,16 @@ class Health(pygame.sprite.Sprite):
 
 
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self, enemy_lives):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.image.load('data/enemy.png')
         self.rect = self.image.get_rect()
         self.rect.center = (WIDTH / 2, -90)
         self.rect.y = -90
         self.mask = pygame.mask.from_surface(self.image)
-        self.lives = 5
         self.appearence = True
-        self.shot_time = time.monotonic()
+        self.lives = enemy_lives
+        self.shot_time = monotonic()
 
     def update(self):
         if self.appearence:
@@ -264,13 +263,13 @@ class Enemy(pygame.sprite.Sprite):
             if not b_in_let:
                 self.rect.x = player.rect.x
                 self.rect.y = player.rect.y // 4 - 40
-            if round(time.monotonic() - self.shot_time) % 2 == 0:
+            if round(monotonic() - self.shot_time) % 2 == 0:
                 shot = Bullet(self.rect.x, self.rect.y, 50, 50)
                 enemy_bullets_sprites.add(shot)
 
 
 class Let(pygame.sprite.Sprite):
-    def __init__(self, group):
+    def __init__(self, group, speed):
         pygame.sprite.Sprite.__init__(self, group)
         w = randrange(20, 100)
         h = randrange(20, w + 10)
@@ -280,15 +279,18 @@ class Let(pygame.sprite.Sprite):
         self.rect.x = randrange(10, WIDTH - w)
         self.rect.y = randrange(-HEIGHT, 0)
         self.mask = pygame.mask.from_surface(self.image)
+        self.speed = speed
 
     def update(self):
-        if pygame.sprite.collide_mask(self, player) and round(time.monotonic() - player.start) > 3:
+        if pygame.sprite.collide_mask(self, player) and round(monotonic() - player.start) > 3:
             player.lives -= 1
-            player.start = time.monotonic()
+            player.start = monotonic()
             player.rect.center = (WIDTH / 2, HEIGHT - 70)
             self.kill()
+        if self.rect.y > HEIGHT:
+            self.kill()
         else:
-            self.rect = self.rect.move(0, 10)
+            self.rect = self.rect.move(0, self.speed)
 
 
 class Bullet(pygame.sprite.Sprite):
@@ -311,12 +313,49 @@ class Bullet(pygame.sprite.Sprite):
                 self.kill()
                 i.kill()
                 break
+        if pygame.sprite.collide_mask(self, player) and self.s == 50:
+            if round(monotonic() - player.start) > 3:
+                player.lives -= 1
+                player.start = monotonic()
+                self.kill()
+        if enemy_live:
+            if pygame.sprite.collide_mask(self, enemy) and self.s == -50:
+                enemy.lives -= 1
+                self.kill()
         if not b_in_let:
             self.rect.y += self.s
+        if self.rect.y < 0 or self.rect.y > HEIGHT:
+            self.kill()
 
 
 class Bonus(pygame.sprite.Sprite):
     pass
+
+
+def new_game():
+    global player_sprites, enemy_sprites, let_sprites, bonus_sprites, player
+    global enemy_bullets_sprites, pause, game_over, run, enemy_live, player_sprites, fon_y, fon_y1
+    global lets_c, lets, start_t, time_without_enemy, live_im, speed, enemy_lives
+    player_sprites = pygame.sprite.Group()
+    enemy_sprites = pygame.sprite.Group()
+    let_sprites = pygame.sprite.Group()
+    bonus_sprites = pygame.sprite.Group()
+    enemy_bullets_sprites = pygame.sprite.Group()
+    pause = False
+    game_over = False
+    run = True
+    enemy_live = False
+    player = Player()
+    player_sprites.add(player)
+    fon_y = 0
+    fon_y1 = -HEIGHT
+    lets_c = 10
+    lets = 0
+    start_t = monotonic()
+    time_without_enemy = monotonic()
+    live_im = pygame.image.load('data/live.png')
+    speed = 8
+    enemy_lives = 5
 
 
 menu = Menu()
@@ -325,24 +364,7 @@ running = True
 while running:
     menu.draw()
     if menu.start_btn_d:
-        player_sprites = pygame.sprite.Group()
-        enemy_sprites = pygame.sprite.Group()
-        let_sprites = pygame.sprite.Group()
-        bonus_sprites = pygame.sprite.Group()
-        enemy_bullets_sprites = pygame.sprite.Group()
-        pause = False
-        game_over = False
-        run = True
-        enemy_live = False
-        player = Player()
-        player_sprites.add(player)
-        fon_y = 0
-        fon_y1 = -HEIGHT
-        lets_c = 10
-        lets = 0
-        start_t = time.monotonic()
-        time_without_enemy = time.monotonic()
-        live_im = pygame.image.load('data/live.png')
+        new_game()
         while run:
             clock.tick(FPS)
             for event in pygame.event.get():
@@ -366,29 +388,16 @@ while running:
                         elif pause_menu.continue_btn_check(x, y):
                             pause = False
                         elif pause_menu.newgame_btn_check(x, y):
-                            player_sprites = pygame.sprite.Group()
-                            enemy_sprites = pygame.sprite.Group()
-                            let_sprites = pygame.sprite.Group()
-                            bonus_sprites = pygame.sprite.Group()
-                            pause = False
-                            game_over = False
-                            run = True
-                            player = Player()
-                            player_sprites.add(player)
-                            fon_y = 0
-                            fon_y1 = -HEIGHT
-                            lets_c = 10
-                            lets = 0
-                            start_t = time.monotonic()
+                            new_game()
                     pause_menu.draw(x, y)
             if not pause and not game_over:
                 keys = pygame.key.get_pressed()
                 if not enemy_live:
-                    print(time.monotonic() - time_without_enemy)
-                    if round(time.monotonic() - time_without_enemy) % 30 == 0 and\
-                            round(time.monotonic() - time_without_enemy) != 0:
+                    print(monotonic() - time_without_enemy)
+                    if round(monotonic() - time_without_enemy) % 30 == 0 and \
+                            round(monotonic() - time_without_enemy) != 0:
                         enemy_live = True
-                        enemy = Enemy()
+                        enemy = Enemy(enemy_lives)
                         enemy_sprites.add(enemy)
                 player.move(keys)
                 player_sprites.update()
@@ -398,8 +407,8 @@ while running:
                 enemy_bullets_sprites.update()
                 screen.blit(fon, (0, fon_y))
                 screen.blit(fon, (0, fon_y1))
-                fon_y += 10
-                fon_y1 += 10
+                fon_y += speed
+                fon_y1 += speed
                 if fon_y > HEIGHT:
                     fon_y = -HEIGHT
                 elif fon_y1 > HEIGHT:
@@ -411,10 +420,20 @@ while running:
                 enemy_bullets_sprites.draw(screen)
                 health_sprites.draw(screen)
                 enemy_sprites.draw(screen)
-                if not enemy_live and not round(time.monotonic() - time_without_enemy) % 28 == 0:
-                    if round(time.monotonic() - start_t) % 4 == 0:
+                if not enemy_live and not round(monotonic() - time_without_enemy) % 28 == 0:
+                    if round(monotonic() - start_t) % 4 == 0:
                         for i in range(2):
-                            Let(let_sprites)
+                            Let(let_sprites, speed)
+                elif enemy_live:
+                    if enemy.lives == 0:
+                        enemy_live = False
+                        time_without_enemy = monotonic()
+                        enemy.kill()
+                        if speed < 32:
+                            speed += 4
+                            FPS += 4
+                        if enemy_live < 10:
+                            enemy_lives += 1
                 if player.lives == 0:
                     game_over = True
             if game_over:
@@ -429,20 +448,7 @@ while running:
                         menu.start_btn_d = False
                         break
                     elif gameover.newgame_btn_check(x, y):
-                        player_sprites = pygame.sprite.Group()
-                        enemy_sprites = pygame.sprite.Group()
-                        let_sprites = pygame.sprite.Group()
-                        bonus_sprites = pygame.sprite.Group()
-                        pause = False
-                        game_over = False
-                        run = True
-                        player = Player()
-                        player_sprites.add(player)
-                        fon_y = 0
-                        fon_y1 = -HEIGHT
-                        lets_c = 10
-                        lets = 0
-                        start_t = time.monotonic()
+                        new_game()
                 gameover.draw(x, y)
             pygame.display.flip()
     else:
