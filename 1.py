@@ -128,6 +128,12 @@ class PauseMenu:
             self.continuebtn = pygame.image.load('data/continue.png')
             self.mainmenu = pygame.image.load('data/main_menu.png')
             self.newgame = pygame.image.load('data/newgame.png')
+        font = pygame.font.Font(None, 200)
+        string_rendered = font.render('Очки: ' + str(points), 1, pygame.Color('yellow'))
+        intro_rect = string_rendered.get_rect()
+        intro_rect.x = WIDTH // 2 - 10
+        intro_rect.y = HEIGHT // 3
+        screen.blit(string_rendered, intro_rect)
         screen.blit(self.fon, (0, 0))
         win.blit(screen, (0, 0))
         screen.blit(self.mainmenu, (100, 350))
