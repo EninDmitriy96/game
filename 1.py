@@ -328,9 +328,18 @@ class Bullet(pygame.sprite.Sprite):
             self.kill()
 
 
-class Bonus(pygame.sprite.Sprite):
-    pass
+class HealthBonus(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface((50, 50))
+        self.rect = self.image.get_rect()
+        self.rect.x = randrange(0, WIDTH)
+        self.rect.y = 0
 
+    def update(self):
+        self.rect.y += 20
+        if pygame.sprite.collide_mask(self, player):
+            self.kill()
 
 def new_game():
     global player_sprites, enemy_sprites, let_sprites, bonus_sprites, player
