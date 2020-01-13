@@ -11,7 +11,10 @@ fon = pygame.image.load('data/fon.png')
 fon = pygame.transform.scale(fon, (WIDTH, HEIGHT))
 bullets_sprites = pygame.sprite.Group()
 health_sprites = pygame.sprite.Group()
+health_bonus_sprites = pygame.sprite.Group()
+shield_bonus_sprites = pygame.sprite.Group()
 clock = pygame.time.Clock()
+points = 0
 FPS = 100
 
 
@@ -127,6 +130,12 @@ class PauseMenu:
             self.continuebtn = pygame.image.load('data/continue.png')
             self.mainmenu = pygame.image.load('data/main_menu.png')
             self.newgame = pygame.image.load('data/newgame.png')
+        font = pygame.font.Font(None, 200)
+        string_rendered = font.render('Очки: ' + str(points), 1, pygame.Color('yellow'))
+        intro_rect = string_rendered.get_rect()
+        intro_rect.x = WIDTH // 2 - 10
+        intro_rect.y = HEIGHT // 3
+        screen.blit(string_rendered, intro_rect)
         screen.blit(self.fon, (0, 0))
         win.blit(screen, (0, 0))
         screen.blit(self.mainmenu, (100, 350))
@@ -190,6 +199,10 @@ class Player(pygame.sprite.Sprite):
             self.image = pygame.image.load('data/player_p.png')
         else:
             self.image = pygame.image.load('data/player.png')
+        if pygame.sprite.spritecollideany(self, health_bonus_sprites):
+            self.lives += 1
+            for i in health_bonus_sprites:
+                health_bonus_sprites.remove(i)
 
     def move(self, i):
         g = True
@@ -261,6 +274,7 @@ class Enemy(pygame.sprite.Sprite):
                 if pygame.sprite.collide_mask(self, i):
                     b_in_let = True
             if not b_in_let:
+                self.rect.center = (player.rect.x + 10, player.rect.y // 4 - 40)
                 self.rect.x = player.rect.x
                 self.rect.y = player.rect.y // 4 - 40
             if round(monotonic() - self.shot_time) % 2 == 0:
@@ -271,6 +285,8 @@ class Enemy(pygame.sprite.Sprite):
 class Let(pygame.sprite.Sprite):
     def __init__(self, group, speed):
         pygame.sprite.Sprite.__init__(self, group)
+        w = randrange(30, 100)
+        h = randrange(30, w + 10)
         w = randrange(20, 100)
         h = randrange(20, w + 10)
         self.image = pygame.image.load('data/let.png')
@@ -306,12 +322,14 @@ class Bullet(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
     def update(self):
+        global points
         b_in_let = False
         for i in let_sprites:
             if pygame.sprite.collide_mask(self, i):
                 b_in_let = True
                 self.kill()
                 i.kill()
+                points += 1
                 break
         if pygame.sprite.collide_mask(self, player) and self.s == 50:
             if round(monotonic() - player.start) > 3:
@@ -329,10 +347,25 @@ class Bullet(pygame.sprite.Sprite):
 
 
 class Bonus(pygame.sprite.Sprite):
+    def __init__(self, type):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface((50, 50))
+        if type == 1:
+            self.image.fill((255, 255, 255))
+        elif type == 2:
+            self.image.fill((0, 255, 0))
+        self.rect = self.image.get_rect()
+        self.rect.x = randrange(10, WIDTH - 10)
+        self.rect.y = 0
+
+    def update(self):
+        self.rect.y += 15
+
     pass
 
 
 def new_game():
+    global player_sprites, enemy_sprites, let_sprites, bonus_sprites, player, points
     global player_sprites, enemy_sprites, let_sprites, bonus_sprites, player
     global enemy_bullets_sprites, pause, game_over, run, enemy_live, player_sprites, fon_y, fon_y1
     global lets_c, lets, start_t, time_without_enemy, live_im, speed, enemy_lives
@@ -356,6 +389,21 @@ def new_game():
     live_im = pygame.image.load('data/live.png')
     speed = 8
     enemy_lives = 5
+    points = 0
+
+
+def draw_points():
+    font = pygame.font.Font(None, 50)
+    string_rendered = font.render('Очки: ' + str(points), 1, pygame.Color('yellow'))
+    intro_rect = string_rendered.get_rect()
+    intro_rect.x = WIDTH - 150
+    intro_rect.y = HEIGHT - 50
+    screen.blit(string_rendered, intro_rect)
+
+
+def draw_enemy_live(lives):
+    if lives != 0:
+        pygame.draw.rect(screen, (0, 255, 0), (WIDTH - lives * 20 - 10, 10, lives * 20, 20))
 
 
 menu = Menu()
@@ -405,6 +453,8 @@ while running:
                 bullets_sprites.update()
                 enemy_sprites.update()
                 enemy_bullets_sprites.update()
+                health_bonus_sprites.update()
+                shield_bonus_sprites.update()
                 screen.blit(fon, (0, fon_y))
                 screen.blit(fon, (0, fon_y1))
                 fon_y += speed
@@ -420,13 +470,23 @@ while running:
                 enemy_bullets_sprites.draw(screen)
                 health_sprites.draw(screen)
                 enemy_sprites.draw(screen)
+                health_bonus_sprites.draw(screen)
+                shield_bonus_sprites.draw(screen)
+                draw_points()
                 if not enemy_live and not round(monotonic() - time_without_enemy) % 28 == 0:
                     if round(monotonic() - start_t) % 4 == 0:
+                        Let(let_sprites, speed)
                         for i in range(2):
                             Let(let_sprites, speed)
                 elif enemy_live:
                     if enemy.lives == 0:
                         enemy_live = False
+                        points += enemy_lives
+                        bonus_type = 1
+                        if bonus_type == 1:
+                            health_bonus_sprites.add(Bonus(1))
+                        elif bonus_type == 2:
+                            shield_bonus_sprites.add(Bonus(2))
                         time_without_enemy = monotonic()
                         enemy.kill()
                         if speed < 32:
@@ -434,6 +494,7 @@ while running:
                             FPS += 4
                         if enemy_live < 10:
                             enemy_lives += 1
+                    draw_enemy_live(enemy.lives)
                 if player.lives == 0:
                     game_over = True
             if game_over:
