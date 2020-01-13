@@ -170,7 +170,7 @@ class GameOverMenu:
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.image.load('data/player_s.png')
+        self.image = pygame.image.load('data/player_p.png')
         self.rect = self.image.get_rect()
         self.rect.center = (WIDTH / 2, HEIGHT - 70)
         self.mask = pygame.mask.from_surface(self.image)
