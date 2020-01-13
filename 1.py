@@ -411,7 +411,7 @@ while running:
                 keys = pygame.key.get_pressed()
                 if not enemy_live:
                     print(monotonic() - time_without_enemy)
-                    if round(monotonic() - time_without_enemy) % 10 == 0 and \
+                    if round(monotonic() - time_without_enemy) % 30 == 0 and \
                             round(monotonic() - time_without_enemy) != 0:
                         enemy_live = True
                         enemy = Enemy(enemy_lives)
