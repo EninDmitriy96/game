@@ -133,7 +133,7 @@ class PauseMenu:
         font = pygame.font.Font(None, 200)
         string_rendered = font.render('Очки: ' + str(points), 1, (255, 255, 250))
         intro_rect = string_rendered.get_rect()
-        intro_rect.x = WIDTH // 2 - 10
+        intro_rect.x = WIDTH // 2 - 40
         intro_rect.y = HEIGHT // 3
         screen.blit(string_rendered, intro_rect)
         screen.blit(self.fon, (0, 0))
@@ -170,6 +170,12 @@ class GameOverMenu:
         else:
             self.mainmenu = pygame.image.load('data/main_menu.png')
             self.newgame = pygame.image.load('data/newgame.png')
+        font = pygame.font.Font(None, 200)
+        string_rendered = font.render('Очки: ' + str(points), 1, (255, 255, 250))
+        intro_rect = string_rendered.get_rect()
+        intro_rect.x = WIDTH // 2 - 40
+        intro_rect.y = HEIGHT // 3
+        screen.blit(string_rendered, intro_rect)
         screen.blit(self.fon, (0, 0))
         win.blit(screen, (0, 0))
         screen.blit(self.mainmenu, (100, 350))
@@ -184,6 +190,8 @@ class Player(pygame.sprite.Sprite):
         self.rect.center = (WIDTH / 2, HEIGHT - 70)
         self.mask = pygame.mask.from_surface(self.image)
         self.start = monotonic()
+        self.shot_snd = pygame.mixer.Sound('data/player_shot_sound.wav')
+        self.shot_snd.set_volume(0.4)
         self.lives = 3
 
     def update(self):
@@ -261,6 +269,8 @@ class Enemy(pygame.sprite.Sprite):
         self.appearence = True
         self.lives = enemy_lives
         self.shot_time = monotonic()
+        self.shot_snd = pygame.mixer.Sound('data/enemy_shot_sound.wav')
+        self.shot_snd.set_volume(0.2)
 
     def update(self):
         if self.appearence:
@@ -277,6 +287,7 @@ class Enemy(pygame.sprite.Sprite):
             if round(monotonic() - self.shot_time) % 2 == 0:
                 shot = Bullet(self.rect.x, self.rect.y, 50, 50)
                 enemy_bullets_sprites.add(shot)
+                self.shot_snd.play()
 
 
 class Let(pygame.sprite.Sprite):
@@ -420,6 +431,7 @@ while running:
                 if not pause and not game_over:
                     if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                         player.shot()
+                        player.shot_snd.play()
                 elif pause and not game_over:
                     x, y = 0, 0
                     if event.type == pygame.MOUSEMOTION:
