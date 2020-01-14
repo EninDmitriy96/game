@@ -8,6 +8,8 @@ win = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 WIDTH, HEIGHT = pygame.display.get_surface().get_size()
 pygame.display.set_caption('Game')
 fon = pygame.image.load('data/fon.png')
+pygame.mixer.music.load('data/menu_music.wave')
+pygame.mixer.music.set_volume(0.5)
 fon = pygame.transform.scale(fon, (WIDTH, HEIGHT))
 bullets_sprites = pygame.sprite.Group()
 health_sprites = pygame.sprite.Group()
@@ -141,6 +143,8 @@ class PauseMenu:
         screen.blit(self.mainmenu, (100, 350))
         screen.blit(self.continuebtn, (500, 650))
         screen.blit(self.newgame, (100, 620))
+        pygame.mixer.music.load('data/menu_music.wave')
+        pygame.mixer.music.set_volume(0.4)
 
 
 class GameOverMenu:
@@ -180,6 +184,7 @@ class GameOverMenu:
         win.blit(screen, (0, 0))
         screen.blit(self.mainmenu, (100, 350))
         screen.blit(self.newgame, (100, 620))
+        # menu_music.play(loops=-1)
 
 
 class Player(pygame.sprite.Sprite):
@@ -398,6 +403,7 @@ def new_game():
     speed = 8
     enemy_lives = 5
     points = 0
+    pygame.mixer.music.load('data/game_music.wave')
 
 
 def draw_points():
@@ -417,10 +423,13 @@ def draw_enemy_live(lives):
 menu = Menu()
 pause_menu = PauseMenu()
 running = True
+pygame.mixer.music.play(loops=-1)
 while running:
     menu.draw()
     if menu.start_btn_d:
         new_game()
+        pygame.mixer.music.load('data/game_music.wave')
+        pygame.mixer.music.play(loops=-1)
         while run:
             clock.tick(FPS)
             for event in pygame.event.get():
@@ -450,7 +459,6 @@ while running:
             if not pause and not game_over:
                 keys = pygame.key.get_pressed()
                 if not enemy_live:
-                    print(monotonic() - time_without_enemy)
                     if round(monotonic() - time_without_enemy) % 30 == 0 and \
                             round(monotonic() - time_without_enemy) != 0:
                         enemy_live = True
@@ -521,6 +529,8 @@ while running:
                         new_game()
                 gameover.draw(x, y)
             pygame.display.flip()
+
     else:
         running = False
+    pygame.mixer.music.play(loops=-1)
 pygame.quit()
