@@ -131,7 +131,7 @@ class PauseMenu:
             self.mainmenu = pygame.image.load('data/main_menu.png')
             self.newgame = pygame.image.load('data/newgame.png')
         font = pygame.font.Font(None, 200)
-        string_rendered = font.render('Очки: ' + str(points), 1, pygame.Color('yellow'))
+        string_rendered = font.render('Очки: ' + str(points), 1, (255, 255, 250))
         intro_rect = string_rendered.get_rect()
         intro_rect.x = WIDTH // 2 - 10
         intro_rect.y = HEIGHT // 3
@@ -264,7 +264,6 @@ class Enemy(pygame.sprite.Sprite):
 
     def update(self):
         if self.appearence:
-            print(self.rect.y)
             self.rect.y += 10
             if self.rect.y == 90:
                 self.appearence = False
@@ -275,8 +274,6 @@ class Enemy(pygame.sprite.Sprite):
                     b_in_let = True
             if not b_in_let:
                 self.rect.center = (player.rect.x + 10, player.rect.y // 4 - 40)
-                self.rect.x = player.rect.x
-                self.rect.y = player.rect.y // 4 - 40
             if round(monotonic() - self.shot_time) % 2 == 0:
                 shot = Bullet(self.rect.x, self.rect.y, 50, 50)
                 enemy_bullets_sprites.add(shot)
@@ -396,7 +393,7 @@ def draw_points():
     font = pygame.font.Font(None, 50)
     string_rendered = font.render('Очки: ' + str(points), 1, pygame.Color('yellow'))
     intro_rect = string_rendered.get_rect()
-    intro_rect.x = WIDTH - 150
+    intro_rect.x = WIDTH - 200
     intro_rect.y = HEIGHT - 50
     screen.blit(string_rendered, intro_rect)
 
