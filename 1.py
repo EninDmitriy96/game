@@ -10,6 +10,7 @@ pygame.display.set_caption('Game')
 fon = pygame.image.load('data/fon.png')
 pygame.mixer.music.load('data/menu_music.wave')
 pygame.mixer.music.set_volume(0.5)
+record = int(open('data/records.txt', mode='r', encoding='UTF8').read())
 fon = pygame.transform.scale(fon, (WIDTH, HEIGHT))
 bullets_sprites = pygame.sprite.Group()
 health_sprites = pygame.sprite.Group()
@@ -24,33 +25,24 @@ class Menu:
     def __init__(self):
         self.start_btn = pygame.Surface((300, 200))
         self.exit_btn = pygame.Surface((200, 100))
-        self.records_btn = pygame.Surface((299, 100))
         self.fon = pygame.image.load('data/menu_fon.png')
         self.fon = pygame.transform.scale(self.fon, (WIDTH, HEIGHT))
         self.start = pygame.image.load('data/start.png')
         self.exit = pygame.image.load('data/exit.png')
-        self.records = pygame.image.load('data/records.png')
         self.start_btn.set_colorkey((0, 0, 0))
         self.exit_btn.set_colorkey((0, 0, 0))
-        self.records_btn.set_colorkey((0, 0, 0))
         self.exit_btn_d = False
         self.start_btn_d = False
-        self.records_btn_d = False
         self.k_n_s = False
         self.k_n_e = False
-        self.k_n_r = False
 
     def start_btn_check(self, x, y):
         return x in [i for i in range(100, 400)] and \
                y in [i for i in range(350, 550)]
 
     def exit_btn_check(self, x, y):
-        return x in [i for i in range(500, 700)] and \
+        return x in [i for i in range(100, 300)] and \
                y in [i for i in range(650, 750)]
-
-    def records_btn_check(self, x, y):
-        return x in [i for i in range(100, 399)] and \
-               y in [i for i in range(620, 720)]
 
     def draw(self):
         run = True
@@ -71,27 +63,26 @@ class Menu:
                         self.k_n_e = True
                     elif self.start_btn_check(x, y):
                         self.k_n_s = True
-                    elif self.records_btn_check(x, y):
-                        self.k_n_r = True
                     else:
                         self.k_n_s = False
                         self.k_n_e = False
-                        self.k_n_r = False
             if self.k_n_s:
                 self.start = pygame.image.load('data/start1.png')
             elif self.k_n_e:
                 self.exit = pygame.image.load('data/exit1.png')
-            elif self.k_n_r:
-                self.records = pygame.image.load('data/records1.png')
             else:
                 self.start = pygame.image.load('data/start.png')
                 self.exit = pygame.image.load('data/exit.png')
-                self.records = pygame.image.load('data/records.png')
             screen.blit(self.fon, (0, 0))
             win.blit(screen, (0, 0))
             screen.blit(self.start, (100, 350))
-            screen.blit(self.exit, (500, 650))
-            screen.blit(self.records, (100, 620))
+            screen.blit(self.exit, (100, 650))
+            font = pygame.font.Font(None, 50)
+            string_rendered = font.render('Лучший рекорд: ' + str(record), 1, (255, 255, 250))
+            intro_rect = string_rendered.get_rect()
+            intro_rect.x = 400
+            intro_rect.y = 550
+            screen.blit(string_rendered, intro_rect)
             pygame.display.update()
 
 
@@ -420,6 +411,11 @@ def draw_enemy_live(lives):
         pygame.draw.rect(screen, (0, 255, 0), (WIDTH - lives * 20 - 10, 10, lives * 20, 20))
 
 
+def rec_record(r):
+    with open('data/records.txt', mode='w', encoding='UTF8') as f:
+        f.write(str(r))
+
+
 menu = Menu()
 pause_menu = PauseMenu()
 running = True
@@ -529,7 +525,10 @@ while running:
                         run = False
                 gameover.draw(x, y)
             pygame.display.flip()
-    else:
+            if points > record:
+                rec_record(points)
+                record = points
+    elif menu.exit_btn_d:
         running = False
     pygame.mixer.music.play(loops=-1)
 pygame.quit()
