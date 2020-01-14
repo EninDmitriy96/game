@@ -429,7 +429,7 @@ while running:
     if menu.start_btn_d:
         new_game()
         pygame.mixer.music.load('data/game_music.wave')
-        pygame.mixer.music.play(loops=-1)
+        pygame.mixer.music.play(-1)
         while run:
             clock.tick(FPS)
             for event in pygame.event.get():
@@ -454,7 +454,7 @@ while running:
                         elif pause_menu.continue_btn_check(x, y):
                             pause = False
                         elif pause_menu.newgame_btn_check(x, y):
-                            new_game()
+                            run = False
                     pause_menu.draw(x, y)
             if not pause and not game_over:
                 keys = pygame.key.get_pressed()
@@ -526,10 +526,9 @@ while running:
                         menu.start_btn_d = False
                         break
                     elif gameover.newgame_btn_check(x, y):
-                        new_game()
+                        run = False
                 gameover.draw(x, y)
             pygame.display.flip()
-
     else:
         running = False
     pygame.mixer.music.play(loops=-1)
