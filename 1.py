@@ -179,7 +179,6 @@ class GameOverMenu:
         win.blit(screen, (0, 0))
         screen.blit(self.mainmenu, (100, 350))
         screen.blit(self.newgame, (100, 620))
-        # menu_music.play(loops=-1)
 
 
 class Player(pygame.sprite.Sprite):
@@ -360,7 +359,6 @@ class Bullet(pygame.sprite.Sprite):
                 i.kill()
                 points += 1
                 break
-        # if pygame.sprite.collide_mask(self, player) and self.s == 50:
         if pygame.sprite.collide_mask(self, player) and self.s == 50 and not shield:
             if round(monotonic() - player.start) > 3:
                 player.lives -= 1
