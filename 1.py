@@ -426,7 +426,7 @@ def new_game():
     speed = 8
     enemy_lives = 5
     points = 0
-    pygame.mixer.music.load('data/game_music.wave')
+    pygame.mixer.music.load('data/game_music.wav')
     pygame.mixer.music.load('data/game_music.wav')
 
 
@@ -538,8 +538,8 @@ while running:
                     if enemy.lives == 0:
                         enemy_live = False
                         slowdown = False
+                        shield = False
                         points += enemy_lives
-                        bonus_type = 1
                         bonus_type = randrange(1, 4)
                         if bonus_type == 1:
                             health_bonus_sprites.add(Bonus(1))
