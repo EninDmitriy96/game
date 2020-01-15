@@ -84,8 +84,8 @@ class Menu:
             font = pygame.font.Font(None, 50)
             string_rendered = font.render('Лучший рекорд: ' + str(record), 1, (255, 255, 250))
             intro_rect = string_rendered.get_rect()
-            intro_rect.x = 400
-            intro_rect.y = 550
+            intro_rect.x = 300
+            intro_rect.y = 580
             screen.blit(string_rendered, intro_rect)
             pygame.display.update()
 
