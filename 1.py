@@ -8,6 +8,7 @@ win = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 WIDTH, HEIGHT = pygame.display.get_surface().get_size()
 pygame.display.set_caption('Game')
 fon = pygame.image.load('data/fon.png')
+pygame.mixer.music.load('data/menu_music.wave')
 pygame.mixer.music.load('data/menu_music.wav')
 pygame.mixer.music.set_volume(0.5)
 record = int(open('data/records.txt', mode='r', encoding='UTF8').read())
@@ -20,7 +21,7 @@ slowdown_bonus_sprites = pygame.sprite.Group()
 let_sprites = pygame.sprite.Group()
 clock = pygame.time.Clock()
 points = 0
-FPS = 100
+FPS = 120
 shield = False
 
 
@@ -301,10 +302,8 @@ class Enemy(pygame.sprite.Sprite):
 class Let(pygame.sprite.Sprite):
     def __init__(self, group, speed):
         pygame.sprite.Sprite.__init__(self, group)
-        w = randrange(30, 100)
-        h = randrange(30, w + 10)
-        w = randrange(20, 100)
-        h = randrange(20, w + 10)
+        w = randrange(40, 100)
+        h = randrange(40, w + 10)
         self.image = pygame.image.load('data/let.png')
         self.image = pygame.transform.scale(self.image, (w, h))
         self.rect = self.image.get_rect()
@@ -316,7 +315,8 @@ class Let(pygame.sprite.Sprite):
         self.slowdown_setted = False
 
     def update(self):
-        global shield
+        if pygame.sprite.collide_mask(self, player) and round(monotonic() - player.start) > 3:
+            global shield
         if slowdown and not self.slowdown_setted:
             self.last_speed = self.speed
             self.speed /= 2
@@ -360,6 +360,7 @@ class Bullet(pygame.sprite.Sprite):
                 i.kill()
                 points += 1
                 break
+        #if pygame.sprite.collide_mask(self, player) and self.s == 50:
         if pygame.sprite.collide_mask(self, player) and self.s == 50 and not shield:
             if round(monotonic() - player.start) > 3:
                 player.lives -= 1
@@ -385,11 +386,11 @@ class Bonus(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.Surface((50, 50))
         if type == 1:
-            self.image.fill((255, 255, 255))
+            self.image = pygame.image.load('data/live.png')
         elif type == 2:
-            self.image.fill((0, 255, 0))
+            self.image = pygame.image.load('data/shield.png')
         elif type == 3:
-            self.image.fill((255, 0, 0))
+            self.image = pygame.image.load('data/slowdown.png')
         self.rect = self.image.get_rect()
         self.rect.x = randrange(10, WIDTH - 10)
         self.rect.y = 0
@@ -397,10 +398,11 @@ class Bonus(pygame.sprite.Sprite):
     def update(self):
         self.rect.y += 15
 
+    pass
+
 
 def new_game():
     global player_sprites, enemy_sprites, let_sprites, bonus_sprites, player, points, shield, slowdown, speed
-    global player_sprites, enemy_sprites, let_sprites, bonus_sprites, player
     global enemy_bullets_sprites, pause, game_over, run, enemy_live, player_sprites, fon_y, fon_y1
     global lets_c, lets, start_t, time_without_enemy, live_im, speed, enemy_lives
     player_sprites = pygame.sprite.Group()
@@ -426,6 +428,7 @@ def new_game():
     speed = 8
     enemy_lives = 5
     points = 0
+    pygame.mixer.music.load('data/game_music.wave')
     pygame.mixer.music.load('data/game_music.wav')
 
 
@@ -456,6 +459,7 @@ while running:
     menu.draw()
     if menu.start_btn_d:
         new_game()
+        pygame.mixer.music.load('data/game_music.wave')
         pygame.mixer.music.load('data/game_music.wav')
         pygame.mixer.music.play(-1)
         while run:
@@ -487,7 +491,7 @@ while running:
             if not pause and not game_over:
                 keys = pygame.key.get_pressed()
                 if not enemy_live:
-                    if round(monotonic() - time_without_enemy) % 30 == 0 and \
+                    if round(monotonic() - time_without_enemy) % 32 == 0 and \
                             round(monotonic() - time_without_enemy) != 0:
                         enemy_live = True
                         enemy = Enemy(enemy_lives)
@@ -503,6 +507,8 @@ while running:
                 slowdown_bonus_sprites.update()
                 screen.blit(fon, (0, fon_y))
                 screen.blit(fon, (0, fon_y1))
+                fon_y += speed
+                fon_y1 += speed
                 if not slowdown:
                     fon_y += speed
                     fon_y1 += speed
@@ -525,8 +531,7 @@ while running:
                 slowdown_bonus_sprites.draw(screen)
                 draw_points()
                 if not enemy_live and not round(monotonic() - time_without_enemy) % 28 == 0:
-                    if round(monotonic() - start_t) % 4 == 0:
-                        Let(let_sprites, speed)
+                    if round(monotonic() - start_t) % 5 == 0:
                         for i in range(2):
                             Let(let_sprites, speed)
                 elif enemy_live:
@@ -534,6 +539,7 @@ while running:
                         enemy_live = False
                         slowdown = False
                         points += enemy_lives
+                        bonus_type = 1
                         bonus_type = randrange(1, 4)
                         if bonus_type == 1:
                             health_bonus_sprites.add(Bonus(1))
