@@ -8,7 +8,7 @@ win = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 WIDTH, HEIGHT = pygame.display.get_surface().get_size()
 pygame.display.set_caption('Game')
 fon = pygame.image.load('data/fon.png')
-pygame.mixer.music.load('data/menu_music.wave')
+sh_im = pygame.image.load('data/shield_p.png')
 pygame.mixer.music.load('data/menu_music.wav')
 pygame.mixer.music.set_volume(0.5)
 record = int(open('data/records.txt', mode='r', encoding='UTF8').read())
@@ -138,7 +138,7 @@ class PauseMenu:
         screen.blit(self.mainmenu, (100, 350))
         screen.blit(self.continuebtn, (500, 650))
         screen.blit(self.newgame, (100, 620))
-        pygame.mixer.music.load('data/menu_music.wave')
+        pygame.mixer.music.load('data/menu_music.wav')
         pygame.mixer.music.set_volume(0.4)
 
 
@@ -360,7 +360,7 @@ class Bullet(pygame.sprite.Sprite):
                 i.kill()
                 points += 1
                 break
-        #if pygame.sprite.collide_mask(self, player) and self.s == 50:
+        # if pygame.sprite.collide_mask(self, player) and self.s == 50:
         if pygame.sprite.collide_mask(self, player) and self.s == 50 and not shield:
             if round(monotonic() - player.start) > 3:
                 player.lives -= 1
@@ -459,9 +459,8 @@ while running:
     menu.draw()
     if menu.start_btn_d:
         new_game()
-        pygame.mixer.music.load('data/game_music.wave')
         pygame.mixer.music.load('data/game_music.wav')
-        pygame.mixer.music.play(-1)
+        pygame.mixer.music.play(loops=-1)
         while run:
             clock.tick(FPS)
             for event in pygame.event.get():
@@ -529,9 +528,12 @@ while running:
                 health_bonus_sprites.draw(screen)
                 shield_bonus_sprites.draw(screen)
                 slowdown_bonus_sprites.draw(screen)
+                if shield:
+                    screen.blit(sh_im, (player.rect.x - 7,
+                                        player.rect.y - 7))
                 draw_points()
-                if not enemy_live and not round(monotonic() - time_without_enemy) % 28 == 0:
-                    if round(monotonic() - start_t) % 5 == 0:
+                if not enemy_live and not round(monotonic() - time_without_enemy) % 32 == 0:
+                    if round(monotonic() - start_t) % 6 == 0:
                         for i in range(2):
                             Let(let_sprites, speed)
                 elif enemy_live:
