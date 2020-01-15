@@ -8,7 +8,7 @@ win = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 WIDTH, HEIGHT = pygame.display.get_surface().get_size()
 pygame.display.set_caption('Game')
 fon = pygame.image.load('data/fon.png')
-pygame.mixer.music.load('data/menu_music.wave')
+pygame.mixer.music.load('data/menu_music.wav')
 pygame.mixer.music.set_volume(0.5)
 record = int(open('data/records.txt', mode='r', encoding='UTF8').read())
 fon = pygame.transform.scale(fon, (WIDTH, HEIGHT))
@@ -16,9 +16,12 @@ bullets_sprites = pygame.sprite.Group()
 health_sprites = pygame.sprite.Group()
 health_bonus_sprites = pygame.sprite.Group()
 shield_bonus_sprites = pygame.sprite.Group()
+slowdown_bonus_sprites = pygame.sprite.Group()
+let_sprites = pygame.sprite.Group()
 clock = pygame.time.Clock()
 points = 0
 FPS = 100
+shield = False
 
 
 class Menu:
@@ -191,6 +194,7 @@ class Player(pygame.sprite.Sprite):
         self.lives = 3
 
     def update(self):
+        global shield, slowdown
         if self.rect.x < 0:
             self.rect.x = 0
         elif self.rect.x > WIDTH - 70:
@@ -207,6 +211,14 @@ class Player(pygame.sprite.Sprite):
             self.lives += 1
             for i in health_bonus_sprites:
                 health_bonus_sprites.remove(i)
+        elif pygame.sprite.spritecollideany(self, shield_bonus_sprites):
+            shield = True
+            for i in shield_bonus_sprites:
+                shield_bonus_sprites.remove(i)
+        elif pygame.sprite.spritecollideany(self, slowdown_bonus_sprites):
+            slowdown = True
+            for i in slowdown_bonus_sprites:
+                slowdown_bonus_sprites.remove(i)
 
     def move(self, i):
         g = True
@@ -300,12 +312,25 @@ class Let(pygame.sprite.Sprite):
         self.rect.y = randrange(-HEIGHT, 0)
         self.mask = pygame.mask.from_surface(self.image)
         self.speed = speed
+        self.last_speed = speed
+        self.slowdown_setted = False
 
     def update(self):
-        if pygame.sprite.collide_mask(self, player) and round(monotonic() - player.start) > 3:
+        global shield
+        if slowdown and not self.slowdown_setted:
+            self.last_speed = self.speed
+            self.speed /= 2
+            self.slowdown_setted = True
+        elif not slowdown and self.slowdown_setted:
+            self.speed = self.last_speed
+            self.slowdown_setted = False
+        if pygame.sprite.collide_mask(self, player) and round(monotonic() - player.start) > 3 and not shield:
             player.lives -= 1
             player.start = monotonic()
             player.rect.center = (WIDTH / 2, HEIGHT - 70)
+            self.kill()
+        elif pygame.sprite.collide_mask(self, player) and round(monotonic() - player.start) > 3 and shield:
+            shield = False
             self.kill()
         if self.rect.y > HEIGHT:
             self.kill()
@@ -326,7 +351,7 @@ class Bullet(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
     def update(self):
-        global points
+        global points, shield
         b_in_let = False
         for i in let_sprites:
             if pygame.sprite.collide_mask(self, i):
@@ -335,9 +360,14 @@ class Bullet(pygame.sprite.Sprite):
                 i.kill()
                 points += 1
                 break
-        if pygame.sprite.collide_mask(self, player) and self.s == 50:
+        if pygame.sprite.collide_mask(self, player) and self.s == 50 and not shield:
             if round(monotonic() - player.start) > 3:
                 player.lives -= 1
+                player.start = monotonic()
+                self.kill()
+        elif pygame.sprite.collide_mask(self, player) and self.s == 50 and shield:
+            if round(monotonic() - player.start) > 3:
+                shield = False
                 player.start = monotonic()
                 self.kill()
         if enemy_live:
@@ -358,6 +388,8 @@ class Bonus(pygame.sprite.Sprite):
             self.image.fill((255, 255, 255))
         elif type == 2:
             self.image.fill((0, 255, 0))
+        elif type == 3:
+            self.image.fill((255, 0, 0))
         self.rect = self.image.get_rect()
         self.rect.x = randrange(10, WIDTH - 10)
         self.rect.y = 0
@@ -365,11 +397,9 @@ class Bonus(pygame.sprite.Sprite):
     def update(self):
         self.rect.y += 15
 
-    pass
-
 
 def new_game():
-    global player_sprites, enemy_sprites, let_sprites, bonus_sprites, player, points
+    global player_sprites, enemy_sprites, let_sprites, bonus_sprites, player, points, shield, slowdown, speed
     global player_sprites, enemy_sprites, let_sprites, bonus_sprites, player
     global enemy_bullets_sprites, pause, game_over, run, enemy_live, player_sprites, fon_y, fon_y1
     global lets_c, lets, start_t, time_without_enemy, live_im, speed, enemy_lives
@@ -382,6 +412,8 @@ def new_game():
     game_over = False
     run = True
     enemy_live = False
+    shield = False
+    slowdown = False
     player = Player()
     player_sprites.add(player)
     fon_y = 0
@@ -394,7 +426,7 @@ def new_game():
     speed = 8
     enemy_lives = 5
     points = 0
-    pygame.mixer.music.load('data/game_music.wave')
+    pygame.mixer.music.load('data/game_music.wav')
 
 
 def draw_points():
@@ -424,7 +456,7 @@ while running:
     menu.draw()
     if menu.start_btn_d:
         new_game()
-        pygame.mixer.music.load('data/game_music.wave')
+        pygame.mixer.music.load('data/game_music.wav')
         pygame.mixer.music.play(-1)
         while run:
             clock.tick(FPS)
@@ -468,10 +500,15 @@ while running:
                 enemy_bullets_sprites.update()
                 health_bonus_sprites.update()
                 shield_bonus_sprites.update()
+                slowdown_bonus_sprites.update()
                 screen.blit(fon, (0, fon_y))
                 screen.blit(fon, (0, fon_y1))
-                fon_y += speed
-                fon_y1 += speed
+                if not slowdown:
+                    fon_y += speed
+                    fon_y1 += speed
+                else:
+                    fon_y += speed / 2
+                    fon_y1 += speed / 2
                 if fon_y > HEIGHT:
                     fon_y = -HEIGHT
                 elif fon_y1 > HEIGHT:
@@ -485,6 +522,7 @@ while running:
                 enemy_sprites.draw(screen)
                 health_bonus_sprites.draw(screen)
                 shield_bonus_sprites.draw(screen)
+                slowdown_bonus_sprites.draw(screen)
                 draw_points()
                 if not enemy_live and not round(monotonic() - time_without_enemy) % 28 == 0:
                     if round(monotonic() - start_t) % 4 == 0:
@@ -494,12 +532,18 @@ while running:
                 elif enemy_live:
                     if enemy.lives == 0:
                         enemy_live = False
+                        slowdown = False
                         points += enemy_lives
-                        bonus_type = 1
+                        bonus_type = randrange(1, 4)
                         if bonus_type == 1:
                             health_bonus_sprites.add(Bonus(1))
                         elif bonus_type == 2:
                             shield_bonus_sprites.add(Bonus(2))
+                        elif bonus_type == 3:
+                            slowdown_bonus_sprites.add(Bonus(3))
+                        if slowdown:
+                            last_speed = speed
+                            speed /= 2
                         time_without_enemy = monotonic()
                         enemy.kill()
                         if speed < 32:
